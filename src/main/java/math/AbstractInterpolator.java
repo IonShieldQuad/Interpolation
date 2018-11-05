@@ -1,20 +1,19 @@
 package math;
 
-import javafx.util.Pair;
-
-import java.util.*;
-import java.util.function.DoubleUnaryOperator;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 
 public abstract class AbstractInterpolator implements Interpolator {
-    private final List<Pair<Double, Double>> points;
+    private final List<PointDouble> points;
     
-    AbstractInterpolator(List<Pair<Double, Double>> points) {
+    AbstractInterpolator(List<PointDouble> points) {
         this.points = new ArrayList<>();
-        points.forEach(p -> this.points.add(new Pair<>(p.getKey(), p.getValue())));
-        this.points.sort(Comparator.comparing(Pair::getKey));
+        points.forEach(p -> this.points.add(new PointDouble(p.getX(), p.getY())));
+        this.points.sort(Comparator.comparing(PointDouble::getX));
     }
     
-    protected List<Pair<Double, Double>> getPoints() {
+    protected List<PointDouble> getPoints() {
         return points;
     }
     
@@ -24,10 +23,10 @@ public abstract class AbstractInterpolator implements Interpolator {
     
     @Override
     public double lower() {
-        return points.get(0).getKey();
+        return points.get(0).getX();
     }
     @Override
     public double upper() {
-        return points.get(points.size() - 1).getKey();
+        return points.get(points.size() - 1).getX();
     }
 }
