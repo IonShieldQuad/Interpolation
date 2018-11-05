@@ -1,10 +1,7 @@
 package core;
 
-import javafx.util.Pair;
-import math.InterpolationException;
-import math.Interpolator;
-import math.InterpolatorFactory;
-import math.NewtonBackInterpolator;
+import graphics.GraphDisplay;
+import math.*;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -13,7 +10,6 @@ import java.util.Comparator;
 import java.util.List;
 
 public class MainWindow {
-    private JPanel graph;
     private JTable points;
     private JPanel rootPanel;
     private JTextArea log;
@@ -24,6 +20,7 @@ public class MainWindow {
     private JTextField calcX;
     private JButton calculateButton;
     private JButton clearButton;
+    private GraphDisplay graph;
     
     private Interpolator interpolator;
     
@@ -36,36 +33,59 @@ public class MainWindow {
         addPointButton.addActionListener(e -> addPoint(addX.getText(), addY.getText()));
         clearButton.addActionListener(e -> initTableModel());
         buildButton.addActionListener(e -> makeInterpolator());
+        calculateButton.addActionListener(e -> interpolateValue(calcX.getText()));
+    }
+    
+    private void interpolateValue(String text) {
+        if (interpolator == null) {
+            log.append("\nError: Interpolator is null");
+        }
+        try {
+            double value = Double.parseDouble(text);
+            double result = interpolator.evaluate(value);
+            log.append("\nValue at x = " + value + " is " + result);
+        }
+        catch (NumberFormatException e) {
+            log.append("\nInvalid input value");
+        } catch (InterpolationException e) {
+            log.append("\nError: " + e.getMessage());
+        }
     }
     
     private void makeInterpolator() {
         InterpolatorFactory factory = getInterpolatorFactory();
         
         try {
+            log.setText("");
             interpolator = factory.makeInterpolator(getPointList());
             log.append("\nInterpolator generated");
             updateGraph();
         }
-        catch (NumberFormatException | InterpolationException e) {
+        catch (InterpolationException e) {
             log.append("\n" + e.getMessage());
+        }
+        catch (NumberFormatException e) {
+            log.append("\nInvalid input format");
         }
     }
     
     private void updateGraph() {
-        //TODO
+        graph.setInterpolator(interpolator);
+        graph.setPoints(getPointList());
+        graph.repaint();
     }
     
-    private List<Pair<Double, Double>> getPointList() {
-        List<Pair<Double, Double>> list = new ArrayList<>();
+    private List<PointDouble> getPointList() {
+        List<PointDouble> list = new ArrayList<>();
         for (int i = 0; i < points.getModel().getRowCount(); i++) {
         
             if (points.getModel().getValueAt(i, 0) == null || points.getModel().getValueAt(i, 1) == null) {
                 continue;
             }
         
-            list.add(new Pair<>(Double.parseDouble((String)points.getModel().getValueAt(i, 0)), Double.parseDouble((String)points.getModel().getValueAt(i, 1))));
+            list.add(new PointDouble(Double.parseDouble((String)points.getModel().getValueAt(i, 0)), Double.parseDouble((String)points.getModel().getValueAt(i, 1))));
         }
-        list.sort(Comparator.comparing(Pair::getKey));
+        list.sort(Comparator.comparing(PointDouble::getX));
         return list;
     }
     
